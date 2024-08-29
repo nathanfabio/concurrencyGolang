@@ -2,30 +2,44 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
 func main() {
 	start := time.Now()
+	var wg sync.WaitGroup
+	wg.Add(3)
+	channel := make(chan string, 3)
 
-	fmt.Println(name())
-	fmt.Println(surname())
-	fmt.Println(city())
+	go name(&wg, channel)
+	go surname(&wg, channel)
+	go city(&wg, channel)
+	wg.Wait()
+
+	close(channel)
+
+	for value := range channel {
+		fmt.Println(value)
+	}
 
 	fmt.Println("time spent: ", time.Since(start))
 }
 
-func name() string {
+func name(wg *sync.WaitGroup, channel chan string) {
+	defer wg.Done()
 	time.Sleep(time.Millisecond * 100)
-	return "nathan"
+	channel <- "nathan"
 }
 
-func surname() string {
+func surname(wg *sync.WaitGroup, channel chan string) {
+	defer wg.Done()
 	time.Sleep(time.Millisecond * 200)
-	return "fabio"
+	channel <- "fabio"
 }
 
-func city() string {
+func city(wg *sync.WaitGroup, channel chan string) {
+	defer wg.Done()
 	time.Sleep(time.Millisecond * 300)
-	return "bebedouro"
+	channel <- "bebedouro"
 }
